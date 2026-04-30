@@ -2,6 +2,10 @@
   "name": "@definancy/sdk",
   "version": "0.0.1",
   "description": "TypeScript SDK for the Definancy API",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/definancy/definancy-sdk-typescript.git"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -17,6 +21,10 @@
         "default": "./dist/index.cjs"
       }
     }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   },
   "files": [
     "dist"
@@ -43,9 +51,5 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/definancy/ts-definancy-sdk.git"
-  }
+  "license": "MIT"
 }
