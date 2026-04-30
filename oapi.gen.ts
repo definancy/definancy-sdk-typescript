@@ -549,10 +549,18 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Vault Velocity Limits */
+        /**
+         * List Vault Velocity Limits
+         * @description Returns all velocity limits configured at the vault scope, ordered
+         *     by window in ascending order.
+         */
         get: operations["GetVaultVelocityLimits"];
         put?: never;
-        /** Create or Update Vault Velocity Limit */
+        /**
+         * Create or Update Vault Velocity Limit
+         * @description Upserts a velocity limit at the vault scope, keyed by `windowMinutes`.
+         *     Setting `windowMinutes` to 0 means "single payment cap" — no time aggregation.
+         */
         post: operations["SetVaultVelocityLimit"];
         delete?: never;
         options?: never;
@@ -570,7 +578,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Vault Velocity Limit */
+        /**
+         * Delete Vault Velocity Limit
+         * @description Removes the vault velocity limit for the given window. Idempotent —
+         *     returns 204 even if the limit does not exist.
+         */
         delete: operations["DeleteVaultVelocityLimit"];
         options?: never;
         head?: never;
