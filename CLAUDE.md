@@ -19,7 +19,7 @@ npm run typecheck   # Type-check without emitting
 
 ```bash
 cd ../../..   # factory root
-task gen-ts
+task gen:typescript
 ```
 
 Do not hand-edit `oapi.gen.ts` — changes are overwritten on regeneration. Modify the OpenAPI spec at `../../../spec/oapi.yaml` instead.
