@@ -495,6 +495,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/account/velocity-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Account Velocity Limits
+         * @description Returns all velocity limits configured at the account scope, ordered by
+         *     window in ascending order.
+         */
+        get: operations["GetAccountVelocityLimits"];
+        put?: never;
+        /**
+         * Create or Update Account Velocity Limit
+         * @description Upserts a velocity limit at the account scope, keyed by `windowMinutes`.
+         *     Setting `windowMinutes` to 0 means "single payment cap" — no time aggregation.
+         */
+        post: operations["SetAccountVelocityLimit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/account/velocity-limits/{windowMinutes}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Account Velocity Limit
+         * @description Removes the account velocity limit for the given window. Idempotent —
+         *     returns 204 even if the limit does not exist.
+         */
+        delete: operations["DeleteAccountVelocityLimit"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/vault/{vaultId}/velocity-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Vault Velocity Limits */
+        get: operations["GetVaultVelocityLimits"];
+        put?: never;
+        /** Create or Update Vault Velocity Limit */
+        post: operations["SetVaultVelocityLimit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/vault/{vaultId}/velocity-limits/{windowMinutes}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Vault Velocity Limit */
+        delete: operations["DeleteVaultVelocityLimit"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/qrcode/transaction": {
         parameters: {
             query?: never;
@@ -1241,6 +1323,11 @@ export interface components {
             /** @description Generated payment scenarios. */
             scenarios: components["schemas"]["PaymentEstimateScenario"][];
             compliance: components["schemas"]["Compliance"];
+            /**
+             * @description Velocity warnings that fired during the estimate check.
+             *     Present only when warn-mode limits were exceeded.
+             */
+            warnings?: components["schemas"]["VelocityWarning"][];
         };
         /**
          * @description Individual payment calculation scenario showing the relationship between
@@ -1310,6 +1397,11 @@ export interface components {
              *     in this payment acceptance.
              */
             compliance: components["schemas"]["Compliance"];
+            /**
+             * @description Velocity warnings that fired during the payment creation check.
+             *     Present only when warn-mode limits were exceeded.
+             */
+            warnings?: components["schemas"]["VelocityWarning"][];
         };
         /**
          * @description Base configuration for payment acceptance operations containing optional
@@ -1471,6 +1563,43 @@ export interface components {
             /** @description Detailed confirmation progress and timing information. */
             "confirmation-stats": components["schemas"]["BlockchainConfirmationStats"];
         };
+        /**
+         * @description Behavior when a velocity limit is exceeded. `reject` blocks the payment with
+         *     a 400 BIZ-010 error; `warn` allows it but emits a warning in the response.
+         * @enum {string}
+         */
+        VelocityMode: "reject" | "warn";
+        /**
+         * @description Hierarchy level at which a velocity limit applies (or was evaluated).
+         * @enum {string}
+         */
+        VelocityScope: "account" | "vault";
+        /**
+         * @description Velocity limit configuration. The unique key per scope is `windowMinutes`.
+         *     Set `windowMinutes` to 0 for "single payment cap" — no time aggregation;
+         *     the check compares the requested amount alone against the limit.
+         *     The limit's `amount` may be denominated in any contract; at check time it
+         *     is converted to the account's velocity reference contract via a market quote.
+         */
+        VelocityLimitFormat: {
+            /** @description Rolling window length in minutes. 0 means single payment cap. */
+            "window-minutes": number;
+            /** @description Limit amount, denominated in any contract. */
+            amount: components["schemas"]["ContractAmountFormat"];
+            mode: components["schemas"]["VelocityMode"];
+        };
+        /**
+         * @description Emitted in the response of estimate/create endpoints when a warn-mode
+         *     velocity limit is exceeded but the request was still allowed to proceed.
+         */
+        VelocityWarning: {
+            scope: components["schemas"]["VelocityScope"];
+            "window-minutes": number;
+            /** @description The configured limit (in its original contract). */
+            limit: components["schemas"]["ContractAmount"];
+            /** @description Total exposure used so far, normalized to the account reference contract. */
+            used: components["schemas"]["Amount"];
+        };
     };
     responses: {
         /**
@@ -1572,6 +1701,11 @@ export interface components {
          *     including payment processing, document management, and configuration updates.
          */
         VaultIdParam: components["schemas"]["VaultId"];
+        /**
+         * @description Rolling window length in minutes used as the unique key for a velocity limit
+         *     within its scope. Use 0 for "single payment cap" (no time aggregation).
+         */
+        VelocityWindowMinutesParam: number;
         /**
          * @description Unique identifier for a payment acceptance within a vault. Used to track
          *     specific payment requests, monitor transaction status, manage associated
@@ -2737,6 +2871,191 @@ export interface operations {
             default: components["responses"]["DefaultResponse"];
         };
     };
+    GetAccountVelocityLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Velocity limits retrieved successfully. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VelocityLimitFormat"][];
+                };
+            };
+            401: components["responses"]["MissingAuthorizationResponse"];
+            403: components["responses"]["ForbiddenResponse"];
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
+    SetAccountVelocityLimit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VelocityLimitFormat"];
+            };
+        };
+        responses: {
+            /** @description Velocity limit upserted successfully. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VelocityLimitFormat"];
+                };
+            };
+            400: components["responses"]["InvalidRequestResponse"];
+            401: components["responses"]["MissingAuthorizationResponse"];
+            403: components["responses"]["ForbiddenResponse"];
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
+    DeleteAccountVelocityLimit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Rolling window length in minutes used as the unique key for a velocity limit
+                 *     within its scope. Use 0 for "single payment cap" (no time aggregation).
+                 */
+                windowMinutes: components["parameters"]["VelocityWindowMinutesParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Velocity limit removed (or absent). */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["MissingAuthorizationResponse"];
+            403: components["responses"]["ForbiddenResponse"];
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
+    GetVaultVelocityLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Unique identifier for a vault container that manages payment acceptance,
+                 *     documents, and contract subscriptions. Used across all vault-related operations
+                 *     including payment processing, document management, and configuration updates.
+                 */
+                vaultId: components["parameters"]["VaultIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Velocity limits retrieved successfully. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VelocityLimitFormat"][];
+                };
+            };
+            401: components["responses"]["MissingAuthorizationResponse"];
+            403: components["responses"]["ForbiddenResponse"];
+            404: components["responses"]["NotFoundResponse"];
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
+    SetVaultVelocityLimit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Unique identifier for a vault container that manages payment acceptance,
+                 *     documents, and contract subscriptions. Used across all vault-related operations
+                 *     including payment processing, document management, and configuration updates.
+                 */
+                vaultId: components["parameters"]["VaultIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VelocityLimitFormat"];
+            };
+        };
+        responses: {
+            /** @description Velocity limit upserted successfully. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VelocityLimitFormat"];
+                };
+            };
+            400: components["responses"]["InvalidRequestResponse"];
+            401: components["responses"]["MissingAuthorizationResponse"];
+            403: components["responses"]["ForbiddenResponse"];
+            404: components["responses"]["NotFoundResponse"];
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
+    DeleteVaultVelocityLimit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Unique identifier for a vault container that manages payment acceptance,
+                 *     documents, and contract subscriptions. Used across all vault-related operations
+                 *     including payment processing, document management, and configuration updates.
+                 */
+                vaultId: components["parameters"]["VaultIdParam"];
+                /**
+                 * @description Rolling window length in minutes used as the unique key for a velocity limit
+                 *     within its scope. Use 0 for "single payment cap" (no time aggregation).
+                 */
+                windowMinutes: components["parameters"]["VelocityWindowMinutesParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Velocity limit removed (or absent). */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["MissingAuthorizationResponse"];
+            403: components["responses"]["ForbiddenResponse"];
+            404: components["responses"]["NotFoundResponse"];
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
     GenerateWalletQrCodes: {
         parameters: {
             query?: never;
@@ -2804,5 +3123,11 @@ export enum ApiPaths {
     SubmitDocument = "/v1/vault/{vaultId}/document",
     GetDocument = "/v1/vault/{vaultId}/document/{documentId}",
     ArchiveDocument = "/v1/vault/{vaultId}/document/{documentId}",
+    GetAccountVelocityLimits = "/v1/account/velocity-limits",
+    SetAccountVelocityLimit = "/v1/account/velocity-limits",
+    DeleteAccountVelocityLimit = "/v1/account/velocity-limits/{windowMinutes}",
+    GetVaultVelocityLimits = "/v1/vault/{vaultId}/velocity-limits",
+    SetVaultVelocityLimit = "/v1/vault/{vaultId}/velocity-limits",
+    DeleteVaultVelocityLimit = "/v1/vault/{vaultId}/velocity-limits/{windowMinutes}",
     GenerateWalletQrCodes = "/v1/qrcode/transaction"
 }
