@@ -1453,11 +1453,6 @@ export interface components {
             /** @description Calculated payment requirement. */
             pay: components["schemas"]["ContractAmount"];
         };
-        /**
-         * @description Unique identifier for payment acceptance using UUID format.
-         *     Ensures global uniqueness across all vaults and payment processing
-         *     operations.
-         */
         PaymentAcceptanceId: components["schemas"]["UUID"];
         /**
          * @description Commercial order context and metadata associated with a payment acceptance.
