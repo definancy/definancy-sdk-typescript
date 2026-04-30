@@ -654,10 +654,21 @@ export interface components {
          *     Accepts value only, raw+decimals only, or both (validated for consistency).
          */
         AmountFormat: components["schemas"]["AmountValue"] | components["schemas"]["AmountRaw"];
+        /**
+         * @description Decimal-string wire form of an amount, expressed in the asset's
+         *     primary unit (e.g. "1.5" for 1.5 BTC). Counterpart to AmountRaw —
+         *     on the wire, use one form, not both, unless intentionally pairing
+         *     them (see AmountFormat).
+         */
         AmountValue: {
             /** @description Amount value in the unit of the asset (e.g., btc). */
             value: components["schemas"]["Number"];
         };
+        /**
+         * @description Smallest-denomination integer form of an amount paired with the
+         *     asset's decimal precision (e.g. raw="150000000", decimals=8 for
+         *     1.5 BTC). The integer-precise counterpart to AmountValue.
+         */
         AmountRaw: {
             /** @description Raw amount value in the smallest unit of the asset (e.g., satoshi for btc). */
             raw: components["schemas"]["UnsignedInteger"];
@@ -682,6 +693,11 @@ export interface components {
          *     and other time-sensitive operations throughout the payment lifecycle.
          */
         Timestamp: number;
+        /**
+         * @description Expiration directive expressible either as an absolute timestamp
+         *     (`at`) or as a relative duration in milliseconds (`in`). One of
+         *     the two is set, never both.
+         */
         Expire: {
             /** @description Timestamp when this payment scenario expires and is no longer valid. */
             at: components["schemas"]["Timestamp"];
@@ -760,16 +776,34 @@ export interface components {
          *     that doesn't fit into structured fields.
          */
         Note: string;
+        /**
+         * @description Map of media references keyed by an arbitrary string label
+         *     (purpose-specific in subtypes — e.g. "logo-light"/"logo-dark"
+         *     on AssetMediaMap). Values are Media descriptors.
+         */
         MediaMap: {
             [key: string]: components["schemas"]["Media"];
         };
+        /**
+         * @description Single media reference with its content type, retrievable URL,
+         *     and optional descriptive metadata.
+         */
         Media: {
             type: components["schemas"]["MediaType"];
             url: components["schemas"]["URL"];
             metadata?: components["schemas"]["MediaMetadata"];
         };
-        /** @enum {string} */
+        /**
+         * @description Content category of a media reference. Currently only `image`
+         *     is supported.
+         * @enum {string}
+         */
         MediaType: "image";
+        /**
+         * @description Free-form metadata bag carried alongside a Media reference
+         *     (dimensions, alt text, source attribution, etc.). Concrete
+         *     fields are subtype-specific and may evolve.
+         */
         MediaMetadata: Record<string, never>;
         /**
          * @description Request object containing the essential payment parameters needed to generate
@@ -813,16 +847,38 @@ export interface components {
         QrCodeEncoding: "byte";
         /** @description Additional technical metadata related with the QR code . */
         QrCodeMetadata: Record<string, never>;
+        /**
+         * @description Map of named traits keyed by trait identifier (e.g.
+         *     "payment-acceptance-price-trait"). Values are open property
+         *     bags — see TraitProperties. Used as the extensibility surface
+         *     for asset/contract/payment metadata.
+         */
         Traits: {
             [key: string]: components["schemas"]["TraitProperties"];
         };
+        /**
+         * @description Free-form property bag for a single trait. Keys and value types
+         *     are trait-specific by design — see Traits and concrete trait
+         *     schemas (e.g. PaymentAcceptancePriceTrait) for the actual
+         *     shapes carried per trait identifier.
+         */
         TraitProperties: {
             [key: string]: unknown;
         };
+        /**
+         * @description Trait declaring the price range a payment-acceptance configuration
+         *     is willing to charge — bounded by `min-amount` and `max-amount`
+         *     Amount values.
+         */
         PaymentAcceptancePriceTrait: {
             "min-amount"?: components["schemas"]["Amount"];
             "max-amount"?: components["schemas"]["Amount"];
         };
+        /**
+         * @description Trait declaring the pay-out range a payment-acceptance configuration
+         *     is willing to receive — bounded by `min-amount` and `max-amount`
+         *     Amount values.
+         */
         PaymentAcceptancePayTrait: {
             "min-amount"?: components["schemas"]["Amount"];
             "max-amount"?: components["schemas"]["Amount"];
@@ -874,6 +930,11 @@ export interface components {
          *     network operations should target.
          */
         NetworkId: string;
+        /**
+         * @description MediaMap subtype scoped to networks, conventionally carrying logo
+         *     variants (e.g. "logo-light", "logo-dark") for network display in
+         *     consumer wallets and dashboards.
+         */
         NetworkMediaMap: components["schemas"]["MediaMap"] & {
             "logo-light": components["schemas"]["Media"];
             "logo-dark": components["schemas"]["Media"];
@@ -936,6 +997,11 @@ export interface components {
         };
         /** @description Ticker symbol for digital asset. */
         AssetUnit: string;
+        /**
+         * @description MediaMap subtype scoped to assets, conventionally carrying logo
+         *     variants (e.g. "logo-light", "logo-dark") for asset display in
+         *     consumer wallets and dashboards.
+         */
         AssetMediaMap: components["schemas"]["MediaMap"] & {
             "logo-light": components["schemas"]["Media"];
             "logo-dark": components["schemas"]["Media"];
@@ -979,10 +1045,21 @@ export interface components {
             "asset-unit": components["schemas"]["AssetUnit"];
             "network-id": components["schemas"]["NetworkId"];
         };
+        /**
+         * @description Traits subtype scoped to contracts. Layers well-known contract
+         *     trait keys (`payment-acceptance-price-trait`,
+         *     `payment-acceptance-pay-trait`) on top of the generic Traits
+         *     open map.
+         */
         ContractTraits: components["schemas"]["Traits"] & {
             "payment-acceptance-price-trait"?: components["schemas"]["PaymentAcceptancePriceTrait"];
             "payment-acceptance-pay-trait"?: components["schemas"]["PaymentAcceptancePayTrait"];
         };
+        /**
+         * @description MediaMap subtype scoped to contracts, conventionally carrying
+         *     logo variants for contract display in consumer wallets and
+         *     dashboards.
+         */
         ContractMediaMap: components["schemas"]["MediaMap"] & {
             "logo-light": components["schemas"]["Media"];
             "logo-dark": components["schemas"]["Media"];
@@ -1087,11 +1164,20 @@ export interface components {
          * @enum {string}
          */
         DocumentType: "PersonV1" | "CustodialV1" | "NonCustodialV1";
+        /**
+         * @description Discriminated union of compliance-document content variants
+         *     (Person V1, Custodial V1, Non-Custodial V1). The `type` field
+         *     selects which variant's data shape applies.
+         */
         DocumentConfig: components["schemas"]["DocumentConfigPersonV1"] | components["schemas"]["DocumentConfigCustodialV1"] | components["schemas"]["DocumentConfigNonCustodialV1"];
         /** @description Document content specification. */
         DocumentConfigBase: {
             type: components["schemas"]["DocumentType"];
         };
+        /**
+         * @description Document configuration carrying PersonV1 identity data (natural
+         *     or legal person). `type` is fixed to "PersonV1".
+         */
         DocumentConfigPersonV1: components["schemas"]["DocumentConfigBase"] & {
             data: components["schemas"]["PersonV1"];
         } & {
@@ -1101,6 +1187,11 @@ export interface components {
              */
             type: "PersonV1";
         };
+        /**
+         * @description Document configuration carrying CustodialV1 data — declares a
+         *     custodial relationship with a regulated provider holding the
+         *     asset. `type` is fixed to "CustodialV1".
+         */
         DocumentConfigCustodialV1: components["schemas"]["DocumentConfigBase"] & {
             data: components["schemas"]["CustodialV1"];
         } & {
@@ -1110,6 +1201,11 @@ export interface components {
              */
             type: "CustodialV1";
         };
+        /**
+         * @description Document configuration carrying NonCustodialV1 data — declares
+         *     a self-custody arrangement bound to a wallet address. `type` is
+         *     fixed to "NonCustodialV1".
+         */
         DocumentConfigNonCustodialV1: components["schemas"]["DocumentConfigBase"] & {
             data: components["schemas"]["NonCustodialV1"];
         } & {
@@ -1132,6 +1228,11 @@ export interface components {
         DocumentStatusId: "pending" | "expired" | "accepted" | "rejected" | "archived";
         /** @description Human-readable validation details. */
         DocumentStatusDetails: string;
+        /**
+         * @description Identity record discriminated between natural persons
+         *     (PersonNaturalV1) and legal entities (PersonLegalV1). The V1
+         *     of Definancy's compliance person model.
+         */
         PersonV1: components["schemas"]["PersonNaturalV1"] | components["schemas"]["PersonLegalV1"];
         /** @description Base identification document data common to both natural and legal persons. */
         PersonBase: {
