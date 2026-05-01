@@ -60,6 +60,18 @@ describe("amounts — language-specific edge cases", () => {
     it("throws on empty value (was: returned '0' in 0.0.x)", () => {
       expect(() => valueToRaw("", 6)).toThrow(RangeError);
     });
+
+    it("throws on rawToValue('') (was: returned '0' in 0.1.x)", () => {
+      expect(() => rawToValue("", 6)).toThrow(RangeError);
+    });
+
+    it("throws on valueToRaw('-') (sign with no digits, was: returned '0')", () => {
+      expect(() => valueToRaw("-", 6)).toThrow(RangeError);
+    });
+
+    it("throws on valueToRaw('-.') (sign + dot with no digits, was: returned '0')", () => {
+      expect(() => valueToRaw("-.", 6)).toThrow(RangeError);
+    });
   });
 
   describe("normalizeAmount edge cases", () => {
