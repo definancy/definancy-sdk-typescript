@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-02
+
+CI maintenance only. No SDK code changes; the published package contents are
+identical to 0.2.0.
+
+### Changed
+- `.github/workflows/publish.yml` Node 20 → 24 (current LTS, project-wide policy).
+
 ## [0.2.0] - 2026-05-01
 
 Cleanup MINOR — TS parity for 2 of the 5 latent defects flagged by 0.1.0.
