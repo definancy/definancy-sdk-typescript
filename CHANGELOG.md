@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-01
+
+Cleanup MINOR — TS parity for 2 of the 5 latent defects flagged by 0.1.0.
+The other 3 defects (Ed25519PublicKey null, hashCode, defensive copy) are
+Java-class-specific and have no TS equivalent.
+
+### Changed (BREAKING)
+- `rawToValue("")` now throws `RangeError`. Previously returned `"0"`
+  (empty input fell through `padStart` logic). Brings `rawToValue`
+  consistent with the 0.1.0 `valueToRaw` tightening.
+- `valueToRaw("-")` (and any input that has a sign but no digits, e.g.
+  `"-."`) now throws `RangeError`. Previously returned `"0"`. Same class
+  of "empty fell through" bug as the 0.1.0 fix, applied to a different
+  input shape.
+
+### Migration
+- Catch `RangeError` at any call site that was relying on either silent
+  behavior.
+
 ## [0.1.0] - 2026-05-01
 
 ### Added
