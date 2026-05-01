@@ -56,6 +56,10 @@ describe("amounts — language-specific edge cases", () => {
     it("throws when fractional part exceeds decimals", () => {
       expect(() => valueToRaw("1.1234567", 6)).toThrow(RangeError);
     });
+
+    it("throws on empty value (was: returned '0' in 0.0.x)", () => {
+      expect(() => valueToRaw("", 6)).toThrow(RangeError);
+    });
   });
 
   describe("normalizeAmount edge cases", () => {

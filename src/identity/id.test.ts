@@ -73,6 +73,12 @@ describe("DefinancyId", () => {
       expect(() => DefinancyId.fromBytes(new Uint8Array(31))).toThrow();
       expect(() => DefinancyId.fromBytes(new Uint8Array(33))).toThrow();
     });
+
+    it("rejects null bytes (TypeError from runtime)", () => {
+      // @ts-expect-error — null isn't assignable to Uint8Array, but we want to
+      // pin the runtime behavior in case a JS caller (no TS) tries this.
+      expect(() => DefinancyId.fromBytes(null)).toThrow();
+    });
   });
 
   describe("equality semantics", () => {
@@ -97,6 +103,15 @@ describe("DefinancyId", () => {
       out[0] = (out[0] + 1) & 0xff;
       const out2 = id.toBytes();
       expect(out2[0]).not.toBe(out[0]);
+    });
+
+    it("equals is value-based on the underlying bytes", () => {
+      const a = DefinancyId.fromBytes(new Uint8Array(32).fill(1));
+      const b = DefinancyId.fromBytes(new Uint8Array(32).fill(1));
+      const c = DefinancyId.fromBytes(new Uint8Array(32).fill(2));
+      expect(a.equals(b)).toBe(true);
+      expect(a.equals(c)).toBe(false);
+      expect(a.equals(a)).toBe(true);
     });
   });
 
