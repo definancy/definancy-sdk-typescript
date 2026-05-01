@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-05-01
+
+### Added
+- `DefinancyId.equals(other)` — value-based equality on the 32-byte
+  payload, constant-time. Matches the Java SDK's `ID.equals`.
+- `KeyPair.equals(other)` — value-based equality on public + private key
+  bytes, constant-time. Matches Java SDK's `KeyPair.equals`.
+
+### Changed (BREAKING)
+- `valueToRaw("")` now throws `RangeError`. Previously returned `"0"` —
+  empty input fell through padding logic. Same behavioral fix as Java
+  `AmountMath.valueToRaw("")`.
+
+### Internal
+- `KeyPair` now stores the raw 32-byte private key seed alongside the
+  `CryptoKey` reference (required to make `equals` synchronous).
+  Consumers should treat `KeyPair` instances as sensitive — don't
+  serialize or log them. Use `export()` to obtain a base64url-encoded
+  seed for storage.
+
 ## [0.0.3] - 2026-05-01
 
 ### Added
