@@ -37,6 +37,9 @@ export function valueToRaw(value: string, decimals: Decimals): string {
   if (decimals < 0 || !Number.isInteger(decimals)) {
     throw new RangeError(`decimals must be a non-negative integer, got ${decimals}`);
   }
+  if (value === "") {
+    throw new RangeError("value must not be empty");
+  }
 
   const negative = value.startsWith("-");
   const abs = negative ? value.slice(1) : value;
