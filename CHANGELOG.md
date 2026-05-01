@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-05-01
+
+### Added
+- Vitest-based unit test layer (`src/**/*.test.ts`) covering
+  TypeScript-specific edge cases that the cross-language conformance
+  vectors don't reach: error class semantics, middleware composition,
+  identity edge cases, and amount-math JS-number-boundary precision.
+- `npm test` and `npm run test:watch` scripts.
+
 ## [0.0.2] - 2026-05-01
 
 ### Added
