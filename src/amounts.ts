@@ -56,6 +56,10 @@ export function valueToRaw(value: string, decimals: Decimals): string {
     fracPart = abs.slice(dotIndex + 1);
   }
 
+  if (intPart === "" && fracPart === "") {
+    throw new RangeError(`value "${value}" has no digits`);
+  }
+
   if (fracPart.length > decimals) {
     throw new RangeError(
       `value "${value}" has ${fracPart.length} decimal places, but only ${decimals} are allowed`,
@@ -77,6 +81,9 @@ export function valueToRaw(value: string, decimals: Decimals): string {
 export function rawToValue(raw: string, decimals: Decimals): string {
   if (decimals < 0 || !Number.isInteger(decimals)) {
     throw new RangeError(`decimals must be a non-negative integer, got ${decimals}`);
+  }
+  if (raw === "") {
+    throw new RangeError("raw must not be empty");
   }
 
   const negative = raw.startsWith("-");
