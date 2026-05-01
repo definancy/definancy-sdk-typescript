@@ -1,0 +1,92 @@
+name: publish
+
+# Triggered by repository_dispatch from the factory's release.yml workflow
+# (definancy/definancy-sdks). The factory pushes factory-vX.Y.Z, then
+# dispatches a `publish-release` event to this repo with {version, sha,
+# factory_tag} in client_payload. This workflow checks out at the SHA,
+# verifies the package version matches, publishes to GitHub Packages, and
+# creates a GitHub Release for vX.Y.Z.
+#
+# Security: client_payload values are passed via env vars (not inlined into
+# run: scripts) to avoid shell injection via maliciously-crafted dispatches.
+
+on:
+  repository_dispatch:
+    types: [publish-release]
+
+permissions:
+  contents: write    # for `gh release create`
+  packages: write    # for `npm publish` to GitHub Packages
+
+jobs:
+  publish:
+    name: Publish v${{ github.event.client_payload.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.client_payload.sha }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@definancy'
+
+      - name: Verify package.json version matches dispatch
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          pkg_v=$(node -p "require('./package.json').version")
+          if [ "$pkg_v" != "$VERSION" ]; then
+            echo "::error::package.json version '$pkg_v' does not match dispatch version '$VERSION'"
+            echo "::error::This means the factory tag pointed at a SHA where the bump didn't apply."
+            exit 1
+          fi
+
+      - name: Build and pack
+        run: |
+          npm ci
+          npm run build
+          npm pack
+
+      - name: Publish to GitHub Packages
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Idempotent on EPUBLISHCONFLICT — workflow re-runs after a transient
+          # failure should treat already-published as success.
+          set +e
+          out=$(npm publish "definancy-sdk-${VERSION}.tgz" 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          if [ $rc -ne 0 ]; then
+            if echo "$out" | grep -qE 'cannot publish over the previously published versions|EPUBLISHCONFLICT|409'; then
+              echo "::warning::version $VERSION already exists in registry — skipping (idempotent retry)"
+              exit 0
+            fi
+            exit $rc
+          fi
+
+      - name: Extract CHANGELOG section for VERSION
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          # Print lines from "## [VERSION]" up to (but not including) the next "## ["
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { capture=1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md > release-notes.md
+          echo "wrote release-notes.md ($(wc -l < release-notes.md) lines)"
+
+      - name: Create GitHub Release
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes-file release-notes.md
