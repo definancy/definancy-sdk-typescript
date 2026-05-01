@@ -84,6 +84,16 @@ export class DefinancyId {
   }
 
   /**
+   * Value-based equality check. Two `DefinancyId` instances are equal if
+   * their underlying 32-byte payloads match. Constant-time comparison to
+   * prevent timing attacks (the bytes are derived from a public key, so
+   * the leak risk is limited, but constant-time is the safe default).
+   */
+  equals(other: DefinancyId): boolean {
+    return constantTimeEqual(this.bytes, other.bytes);
+  }
+
+  /**
    * Encode the ID as a 58-character Base32 string with checksum.
    *
    * Steps:

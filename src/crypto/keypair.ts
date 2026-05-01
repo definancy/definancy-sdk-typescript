@@ -31,15 +31,18 @@ export class KeyPair implements Signer {
   private readonly privateKey: CryptoKey;
   private readonly publicKey: CryptoKey;
   private readonly rawPublicKey: Uint8Array;
+  private readonly rawPrivateKey: Uint8Array;
 
   private constructor(
     privateKey: CryptoKey,
     publicKey: CryptoKey,
     rawPublicKey: Uint8Array,
+    rawPrivateKey: Uint8Array,
   ) {
     this.privateKey = privateKey;
     this.publicKey = publicKey;
     this.rawPublicKey = rawPublicKey;
+    this.rawPrivateKey = rawPrivateKey;
   }
 
   /** Generate a random ED25519 key pair. */
@@ -47,7 +50,10 @@ export class KeyPair implements Signer {
     const result = await crypto.subtle.generateKey("Ed25519", true, ["sign", "verify"]);
     const pair = result as { privateKey: CryptoKey; publicKey: CryptoKey };
     const rawPub = new Uint8Array(await crypto.subtle.exportKey("raw", pair.publicKey));
-    return new KeyPair(pair.privateKey, pair.publicKey, rawPub);
+    const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey));
+    // Extract the 32-byte seed from PKCS#8 wrapping (skip ASN.1 prefix)
+    const rawPriv = pkcs8.slice(pkcs8.length - 32);
+    return new KeyPair(pair.privateKey, pair.publicKey, rawPub, rawPriv);
   }
 
   /**
@@ -93,15 +99,12 @@ export class KeyPair implements Signer {
     );
 
     const rawPub = new Uint8Array(await crypto.subtle.exportKey("raw", publicKey));
-    return new KeyPair(privateKey, publicKey, rawPub);
+    return new KeyPair(privateKey, publicKey, rawPub, seed);
   }
 
   /** Export the private key seed as a base64url-encoded string. */
   async export(): Promise<string> {
-    const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", this.privateKey));
-    // Extract the 32-byte seed from PKCS#8 wrapping (skip ASN.1 prefix)
-    const seed = pkcs8.slice(pkcs8.length - 32);
-    return encodeBase64Url(seed);
+    return encodeBase64Url(this.rawPrivateKey);
   }
 
   /** Get the raw 32-byte public key. */
@@ -138,4 +141,33 @@ export class KeyPair implements Signer {
   async jwk(): Promise<Jwk> {
     return createJwk(this.rawPublicKey);
   }
+
+  /**
+   * Value-based equality on public + private key material. Constant-time
+   * byte comparison to prevent timing attacks on the private bytes.
+   *
+   * Matches the Java SDK's `KeyPair.equals` semantics.
+   *
+   * Security note: holding the raw private bytes in the KeyPair instance
+   * (required to make `equals` synchronous) means consumers should treat
+   * KeyPair instances as sensitive — don't serialize them, don't store
+   * them in logs, etc. Use `export()` to get a base64url-encoded seed
+   * for storage.
+   */
+  equals(other: KeyPair): boolean {
+    return (
+      constantTimeEqual(this.rawPublicKey, other.rawPublicKey) &&
+      constantTimeEqual(this.rawPrivateKey, other.rawPrivateKey)
+    );
+  }
+}
+
+/** Constant-time comparison to prevent timing attacks on private key bytes. */
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
 }
