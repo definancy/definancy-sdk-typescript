@@ -87,6 +87,10 @@ jobs:
           VERSION: ${{ github.event.client_payload.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Attach the npm tarball that was packed earlier — same artifact
+          # bytes that GitHub Packages serves; lets partners grab it without
+          # configuring an npm registry.
           gh release create "v${VERSION}" \
             --title "v${VERSION}" \
-            --notes-file release-notes.md
+            --notes-file release-notes.md \
+            "definancy-sdk-${VERSION}.tgz"
