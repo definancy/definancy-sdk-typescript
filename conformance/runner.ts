@@ -250,11 +250,8 @@ async function runEd25519(): Promise<void> {
 // =============================================================================
 // Domain: sha512_256
 //
-// Note: this domain is expected to FAIL today — the TS SDK calls
-// `crypto.subtle.digest("SHA-512/256", ...)` which is not a registered
-// WebCrypto algorithm. See `algorithms/sha512_256.md`. The vectors are
-// kept active so the runner reports the failure as a documented red
-// state until Session 3 swaps in a real SHA-512/256.
+// Implemented via @noble/hashes (WebCrypto does not register SHA-512/256
+// as an algorithm). See src/crypto/digester.ts and algorithms/sha512_256.md.
 // =============================================================================
 async function runSha512_256(): Promise<void> {
   for (const vec of await loadVectors("sha512_256")) {
