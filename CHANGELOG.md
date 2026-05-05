@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the conformance suite consolidated into the spec submodule —
   `definancy-spec` repo).
 
+### Documentation
+- README upstream link updated `definancy-api` → `definancy-spec` (the
+  spec repo was renamed; the old URL still redirects).
+- `CLAUDE.md` rewritten for standalone-clone consumers — removed
+  references to upstream tooling and replaced relative cross-repo paths
+  with public GitHub URLs.
+
 ## [0.3.0] - 2026-05-02
 
 CI maintenance only. No SDK code changes; the published package contents are

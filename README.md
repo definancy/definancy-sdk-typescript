@@ -1,6 +1,6 @@
 # @definancy/sdk
 
-TypeScript SDK for the [Definancy API](https://github.com/definancy/definancy-api).
+TypeScript SDK for the [Definancy API](https://github.com/definancy/definancy-spec).
 
 ## What it is
 
