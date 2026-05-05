@@ -22,7 +22,7 @@ cd ../../..   # factory root
 task gen:typescript
 ```
 
-Do not hand-edit `oapi.gen.ts` — changes are overwritten on regeneration. Modify the OpenAPI spec at `../../../spec/openapi/oapi.yaml` instead.
+Do not hand-edit `oapi.gen.ts` — changes are overwritten on regeneration. Modify the OpenAPI spec at `../../../spec/api/openapi.yaml` instead.
 
 ## Architecture
 
