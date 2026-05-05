@@ -34,6 +34,8 @@ export class LocalAuthProvider implements AuthProvider {
   ): Promise<Authentication> {
     const parsed = new URL(url);
     const audience = `${parsed.protocol}//${parsed.host}`;
+    // RFC 9449 §4.2: htu is the request URI without query and fragment.
+    const htu = `${parsed.protocol}//${parsed.host}${parsed.pathname}`;
 
     const jwk = await this.signer.jwk();
     const thumbprint = await jwkThumbprint(jwk);
@@ -46,7 +48,7 @@ export class LocalAuthProvider implements AuthProvider {
     // Build and sign DPoP proof (clock + jti impurities stay at this boundary)
     const jti = crypto.randomUUID();
     const dpopIat = Math.floor(Date.now() / 1000);
-    const dpopJwt = await createDpopProof(jti, method, audience, body, jwk, dpopIat, dpopIat + 60);
+    const dpopJwt = await createDpopProof(jti, method, htu, body, jwk, dpopIat, dpopIat + 60);
     dpopJwt.setSignature(await this.signer.sign(dpopJwt.encode()));
 
     return {

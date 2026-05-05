@@ -1,19 +1,19 @@
 /**
  * Cross-language conformance runner — TypeScript SDK.
  *
- * Loads YAML test vectors from the factory's `conformance/vectors/` tree
- * and asserts that the SDK's hand-written domain code produces byte-identical
- * outputs. Reports `<name>:<label> PASS|FAIL` per case and exits non-zero on
- * any failure.
+ * Loads YAML test vectors from the spec submodule's `spec/conformance/vectors/`
+ * tree and asserts that the SDK's hand-written domain code produces byte-
+ * identical outputs. Reports `<name>:<label> PASS|FAIL` per case and exits
+ * non-zero on any failure.
  *
  * Usage:
  *   npm run conformance
  *
- * Vectors live at `<factory>/conformance/vectors/<domain>/<scenario>.yaml`.
+ * Vectors live at `<factory>/spec/conformance/vectors/<domain>/<scenario>.yaml`.
  * The runner expects to be executed from inside the factory checkout (the
  * relative path traversal below assumes this layout).
  *
- * See `<factory>/conformance/README.md` for the schema, encoding-suffix
+ * See `<factory>/spec/conformance/README.md` for the schema, encoding-suffix
  * conventions, and YAML rules. Vectors encode CORRECT behavior; failing
  * cases here are SDK bugs to fix, not vectors to relax.
  */
@@ -42,8 +42,8 @@ import { valueToRaw, rawToValue } from "../src/amounts.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// languages/typescript/sdk/conformance → … → factory
-const VECTORS_ROOT = join(__dirname, "../../../../conformance/vectors");
+// languages/typescript/sdk/conformance → … → factory → spec/conformance/vectors
+const VECTORS_ROOT = join(__dirname, "../../../../spec/conformance/vectors");
 
 interface VectorCase {
   label: string;

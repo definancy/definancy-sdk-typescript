@@ -10,7 +10,7 @@ import { Jwt } from "./jwt.js";
  * Claims:
  * - `jti`: unique token ID
  * - `htm`: HTTP method
- * - `htu`: audience URL (scheme + host + port)
+ * - `htu`: request URI without query and fragment (RFC 9449 §4.2)
  * - `iat` / `exp`: issued-at and expiry (epoch seconds)
  * - `bsh`: SHA-512/256 hash of request body (if present)
  *

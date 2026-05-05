@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DefinancyId } from "./id.js";
 
 // A known-good (id, public_key_hex) pair from
-// conformance/vectors/id_checksum/rfc_8032_pubkeys.yaml — the first case.
+// spec/conformance/vectors/id_checksum/rfc_8032_pubkeys.yaml — the first case.
 const VALID_ID_STRING = "25NJQAMCWEFLPVKL73J4SZAHHIHOC4XT3KTCGJNPAINGR5YHKENMEF5QTE";
 const VALID_PUBKEY_HEX = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a";
 
