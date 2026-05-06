@@ -1,6 +1,7 @@
 import type { MiddlewareCallbackParams } from "openapi-fetch";
 import { describe, expect, it } from "vitest";
-import { DefinancyError, errorMiddleware } from "./errors.js";
+import { DefinancyError } from "./errors.js";
+import { errorMiddleware } from "./middleware/error.js";
 import type { ErrorList } from "./types.js";
 
 /**

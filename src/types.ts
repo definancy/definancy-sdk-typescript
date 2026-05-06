@@ -143,3 +143,9 @@ export type QrCodeTransactionRequest = components["schemas"]["QrCodeTransactionR
 export type QrCode = components["schemas"]["QrCode"];
 export type QrCodeType = components["schemas"]["QrCodeType"];
 export type QrCodeEncoding = components["schemas"]["QrCodeEncoding"];
+
+// Velocity limits
+export type VelocityLimitFormat = components["schemas"]["VelocityLimitFormat"];
+export type VelocityMode = components["schemas"]["VelocityMode"];
+export type VelocityScope = components["schemas"]["VelocityScope"];
+export type VelocityWarning = components["schemas"]["VelocityWarning"];

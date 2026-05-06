@@ -8,8 +8,9 @@ type Templates = {
 /**
  * Network block explorer URL resolver with template caching.
  *
- * Fetches URL templates from the API once per network, then resolves
- * all subsequent URLs locally by replacing the `{value}` placeholder.
+ * Fetches URL templates from the API once per network (via
+ * `client.networks.getExplorer`), then resolves all subsequent URLs
+ * locally by replacing the `{value}` placeholder.
  *
  * @example
  * ```ts
@@ -30,14 +31,7 @@ export function createExplorer(client: DefinancyClient): Explorer {
     const cached = cache.get(networkId);
     if (cached) return cached;
 
-    const { data } = await client.GET(
-      "/v1/network/{networkId}/explorer",
-      { params: { path: { networkId } } },
-    );
-
-    if (!data) {
-      throw new Error(`Explorer templates not available for network ${networkId}`);
-    }
+    const data = await client.networks.getExplorer(networkId);
 
     const templates: Templates = {
       addressUrl: data["address-url"],

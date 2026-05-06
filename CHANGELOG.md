@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — BREAKING
+- **Tier-3 facade.** `createClient()` now returns a resource-grouped
+  client: `client.vaults.get(id)`, `client.assets.list()`,
+  `client.paymentAcceptances.estimate(vaultId, [...])`, etc. Eleven
+  namespaces (`health`, `auth`, `networks`, `assets`, `contracts`,
+  `vaults`, `paymentAcceptances`, `documents`, `velocityLimits`,
+  `qrCodes`, `experimental`) cover all 39 spec operations. Methods
+  throw `DefinancyError` (or a subclass) on non-2xx and return the
+  parsed body directly — no more `{ data, error }` tuples on the
+  primary surface.
+- **`client.raw`** — escape hatch exposing the underlying `openapi-fetch`
+  handle. Use for spec endpoints not yet wrapped by the facade
+  (`client.raw.GET("/v1/...", ...)`).
+- **Discriminated error subclasses** — `NotFoundError`, `RateLimitError`,
+  `AuthenticationError`, `ValidationError`, `ServerError` extend
+  `DefinancyError` and let partner code use `instanceof` narrowing.
+  `DefinancyError.requestId` carries the `X-Request-Id` from the
+  response for support-ticket correlation.
+- **Per-call options** — every facade method accepts an optional final
+  `RequestOptions { signal?, timeout?, headers? }` argument.
+- **Built-in retry** — exponential backoff + jitter on 429 / 5xx,
+  honouring `Retry-After`. Default policy ships pre-wired; configurable
+  via `createClient({ retry })`.
+- **Rate-limit + request-ID introspection** — `client.lastRequestId`
+  and `client.lastRateLimit` expose the most recent values parsed from
+  response headers.
+
+### Changed — BREAKING
+- **`createClient()` return shape** flipped from the bare
+  `openapi-fetch` `Client<paths>` to the new `DefinancyClient` facade.
+  Migrate `client.GET/POST/PUT/PATCH/DELETE(...)` call sites to
+  `client.<resource>.<op>(...)`, or use `client.raw.<METHOD>(...)` to
+  keep the pre-existing wire-level call shape.
+
 ### Fixed
 - **DPoP `htu` claim** now follows RFC 9449 §4.2 (scheme + authority + path,
   no query, no fragment), replacing the previous audience-only value
