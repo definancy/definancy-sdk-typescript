@@ -48,6 +48,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/experimental/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Experimental connectivity probe
+         * @description Connectivity probe for the Experimental tag surface. Returns OK when
+         *     the daemon's experimental endpoints are reachable. Reserved for
+         *     future development-environment endpoints (DPoP testing aids,
+         *     fixture seeding, etc.).
+         */
+        get: operations["ExperimentalPing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/{definancyId}": {
         parameters: {
             query?: never;
@@ -1886,6 +1909,28 @@ export interface operations {
             default: components["responses"]["DefaultResponse"];
         };
     };
+    ExperimentalPing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["CacheControlHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Status"];
+                };
+            };
+            default: components["responses"]["DefaultResponse"];
+        };
+    };
     RegisterAuth: {
         parameters: {
             query?: never;
@@ -3202,6 +3247,7 @@ export interface operations {
 export enum ApiPaths {
     HealthyCheck = "/v1/healthy",
     ReadyCheck = "/v1/ready",
+    ExperimentalPing = "/v1/experimental/ping",
     RegisterAuth = "/v1/auth/{definancyId}",
     GetNetworks = "/v1/network",
     GetNetwork = "/v1/network/{networkId}",
